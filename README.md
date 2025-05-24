@@ -11,10 +11,11 @@ Este projeto permite o registro simples e eficiente do uso de veículos da empre
 
 O colaborador interage com o bot via mensagens simples:
 
+```text
 Menu:
 1 - Utilizar Veículo
 2 - Devolver Veículo
-
+```
 
 ### ✅ Fluxo de Utilização
 
