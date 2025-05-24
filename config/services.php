@@ -38,6 +38,7 @@ return [
     'evolution_api' => [
         'url' => env('EVOLUTION_API_URL', 'http://localhost:8080'),
         'key' => env('EVOLUTION_API_KEY'),
+        'instance' => env('EVOLUTION_API_INSTANCE', 'teste-15'),
     ],
 
 ];

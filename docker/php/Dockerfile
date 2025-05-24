@@ -12,6 +12,8 @@ RUN apt-get update && apt-get install -y \
     curl \
     git \
     supervisor \
+    && pecl install redis \
+    && docker-php-ext-enable redis \
     && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
 
 # Instala Composer
@@ -26,3 +28,6 @@ COPY docker/supervisor/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 # Exponha a porta 9000 e inicie o supervisor
 EXPOSE 9000
 CMD ["/usr/bin/supervisord"]
+
+# Adiciona alias para php artisan
+RUN echo "alias pa='php artisan'" >> /root/.bashrc
