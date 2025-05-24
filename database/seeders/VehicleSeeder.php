@@ -49,7 +49,7 @@ class VehicleSeeder extends Seeder
                 'updated_at' => now(),
             ],
             [
-                'plate' => 'GHI5678',
+                'plate' => 'GHI1234',
                 'model' => 'HB20',
                 'brand' => 'Hyundai',
                 'year' => 2019,

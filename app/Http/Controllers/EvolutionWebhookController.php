@@ -94,12 +94,23 @@ class EvolutionWebhookController extends Controller
                             'response' => $response
                         ]);
                         
-                        // Envia a resposta via Evolution API
+                        // Envia a primeira mensagem
                         $result = $this->evolutionApiService->sendMessage($phone, $response['message']);
                         
-                        Log::info('Resultado do envio da mensagem:', [
+                        Log::info('Resultado do envio da primeira mensagem:', [
                             'success' => $result
                         ]);
+                        
+                        // Se tiver send_menu_next, envia o menu em uma segunda mensagem
+                        if (isset($response['send_menu_next']) && $response['send_menu_next']) {
+                            sleep(1); // Pequeno delay para garantir ordem das mensagens
+                            $menuMessage = $this->menuService->getMenuMessage($response['menu']);
+                            $menuResult = $this->evolutionApiService->sendMessage($phone, $menuMessage);
+                            
+                            Log::info('Resultado do envio do menu:', [
+                                'success' => $menuResult
+                            ]);
+                        }
                     } catch (\Exception $e) {
                         Log::error('Erro ao processar resposta:', [
                             'error' => $e->getMessage(),
