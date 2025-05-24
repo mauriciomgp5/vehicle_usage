@@ -17,7 +17,7 @@ class DatabaseSeeder extends Seeder
 
         User::create([
             'name' => 'Test User',
-            'phone' => '5517996165851',
+            'phone' => '5517999999999',
             'email' => 'test@example.com',
             'password' => bcrypt('password'),
             'is_supervisor' => true,
