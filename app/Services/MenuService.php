@@ -6,6 +6,8 @@ use Illuminate\Support\Facades\Log;
 use App\Models\Vehicle;
 use App\Models\VehicleUsage;
 use App\Models\User;
+use App\Models\Occurrence;
+use App\Models\OccurrencePhoto;
 
 class MenuService
 {
@@ -13,8 +15,8 @@ class MenuService
     private $menus = [
         'main_menu' => [
             'message' => "Utilização de Veículo:\n\n" .
-                        "1 - Registrar Saída\n" .
-                        "2 - Registrar Retorno\n" .
+                        "1 - Pegar Veículo\n" .
+                        "2 - Devolver Veículo\n" .
                         "3 - Consultar Status\n" .
                         "0 - Voltar ao Menu Principal",
             'options' => [
@@ -56,8 +58,23 @@ class MenuService
             'options' => []
         ],
         'register_ocorrencia' => [
-            'message' => "Por favor, descreva a ocorrência:",
+            'message' => "📝 Registrar Ocorrência\n\n" .
+                        "Por favor, descreva brevemente a ocorrência:\n\n" .
+                        "💡 Dica: Seja claro e objetivo\n" .
+                        "(Ex: 'Pneu furou', 'Arranhão lateral', etc.)",
             'options' => []
+        ],
+        'register_ocorrencia_photos' => [
+            'message' => "📸 Adicionar Fotos à Ocorrência\n\n" .
+                        "📷 Envie fotos da ocorrência (uma por vez)\n" .
+                        "💬 Adicione uma legenda para cada foto\n\n" .
+                        "📋 Menu:\n" .
+                        "1 - Finalizar registro\n" .
+                        "2 - Cancelar ocorrência",
+            'options' => [
+                '1' => 'finalize_occurrence',
+                '2' => 'cancel_occurrence'
+            ]
         ],
         'ask_name' => [
             'message' => "👋 Olá! Para continuar, por favor informe seu nome completo:\n\n(Ex: João da Silva)",
@@ -134,7 +151,7 @@ class MenuService
         }
     }
 
-    public function handleUserResponse(string $phone, string $message): array
+    public function handleUserResponse(string $phone, string $message, string $messageType = 'text', ?string $mediaId = null, ?string $caption = null, ?array $imageData = null): array
     {
         $cleanPhone = $this->cleanPhone($phone);
         
@@ -420,52 +437,85 @@ class MenuService
             ];
         }
 
-        // Ocorrência: salva mensagem, encerra sessão
+        // Ocorrência: salva mensagem/foto, encerra sessão
         if ($currentMenu === 'register_ocorrencia') {
             $active = $this->checkActiveUsage($userId);
             if ($active) {
-                $ocorrencia = trim($message);
+                $description = trim($message);
                 
-                // Validação mínima da ocorrência
-                if (strlen($ocorrencia) < 10) {
+                // Validação mínima da descrição
+                if (strlen($description) < 5) {
                     return [
                         'message' => "❌ Descrição muito curta.\n\n" .
-                                   "Por favor, descreva a ocorrência com mais detalhes (mínimo 10 caracteres):",
+                                   "Por favor, descreva a ocorrência com mais detalhes (mínimo 5 caracteres):",
                         'menu' => 'register_ocorrencia'
                     ];
                 }
                 
-                // Adiciona timestamp à ocorrência existente
-                $dataAtual = now()->format('d/m/Y H:i');
-                $novaOcorrencia = "[{$dataAtual}] {$ocorrencia}";
+                // Criar a ocorrência inicial (sem fotos ainda)
+                $occurrence = Occurrence::create([
+                    'vehicle_usage_id' => $active->id,
+                    'description' => $description,
+                    'type' => 'incident',
+                    'severity' => 'medium'
+                ]);
                 
-                if ($active->notes) {
-                    $active->notes = $active->notes . "\n\n" . $novaOcorrencia;
-                } else {
-                    $active->notes = $novaOcorrencia;
-                }
+                // Salvar ID da ocorrência na sessão para adicionar fotos
+                $this->redisSessionService->setSessionData($phone, 'occurrence_id', $occurrence->id);
+                $this->redisSessionService->setSessionData($phone, 'photos_count', 0);
+                $this->redisSessionService->updateMenu($phone, 'register_ocorrencia_photos');
                 
-                $active->save();
-                
-                // Notificar supervisores sobre a ocorrência
-                $this->notifySupervisors(
-                    "⚠️ OCORRÊNCIA REGISTRADA\n\n" .
-                    "👤 Usuário: {$active->user->name}\n" .
-                    "📱 Telefone: {$active->user->phone}\n" .
-                    "🚙 Veículo: {$active->vehicle->brand} {$active->vehicle->model}\n" .
-                    "🏷️ Placa: {$active->vehicle->plate}\n" .
-                    "📝 Ocorrência: {$ocorrencia}\n" .
-                    "🕐 Horário: " . now()->format('d/m/Y H:i')
-                );
+                return [
+                    'message' => "✅ Ocorrência criada!\n\n" .
+                               "📝 Descrição: {$description}\n\n" .
+                               $this->getMenuMessage('register_ocorrencia_photos'),
+                    'menu' => 'register_ocorrencia_photos'
+                ];
             }
+            
             $this->redisSessionService->deleteSession($phone);
             return [
-                'message' => "✅ Ocorrência registrada com sucesso!\n\n" .
-                           "📝 Descrição: {$ocorrencia}\n" .
-                           "🚗 Veículo: {$active->vehicle->brand} {$active->vehicle->model} ({$active->vehicle->plate})\n" .
-                           "🕐 Data/Hora: " . now()->format('d/m/Y H:i') . "\n\n" .
-                           "Obrigado pelo registro! 📋",
+                'message' => "❌ Erro: Nenhum uso ativo encontrado.",
                 'menu' => 'none'
+            ];
+        }
+
+        // NOVO FLUXO: Adicionando fotos à ocorrência
+        if ($currentMenu === 'register_ocorrencia_photos') {
+            $occurrenceId = $this->redisSessionService->getSessionData($phone, 'occurrence_id');
+            $photosCount = $this->redisSessionService->getSessionData($phone, 'photos_count', 0);
+            
+            if (!$occurrenceId) {
+                $this->redisSessionService->deleteSession($phone);
+                return [
+                    'message' => "❌ Erro: Sessão perdida. Tente novamente.",
+                    'menu' => 'main_menu'
+                ];
+            }
+            
+            // Se usuário escolheu finalizar
+            if ($message === '1') {
+                return $this->finalizeOccurrence($phone, $occurrenceId, $photosCount);
+            }
+            
+            // Se usuário escolheu cancelar
+            if ($message === '2') {
+                return $this->cancelOccurrence($phone, $occurrenceId);
+            }
+            
+            // Se é uma imagem
+            if ($messageType === 'image' && $imageData) {
+                return $this->addPhotoToOccurrence($phone, $occurrenceId, $imageData, $caption, $photosCount);
+            }
+            
+            // Se é texto mas não é "1" ou "2", explicar novamente
+            return [
+                'message' => "📷 Por favor:\n\n" .
+                           "• Envie uma foto da ocorrência, OU\n" .
+                           "• Digite '1' para finalizar, OU\n" .
+                           "• Digite '2' para cancelar\n\n" .
+                           "📊 Fotos adicionadas: {$photosCount}",
+                'menu' => 'register_ocorrencia_photos'
             ];
         }
 
@@ -477,5 +527,170 @@ class MenuService
             'message' => $response,
             'menu' => $nextMenu
         ];
+    }
+
+    private function addPhotoToOccurrence($phone, $occurrenceId, $imageData, $caption, $currentCount)
+    {
+        try {
+            // Salva a imagem usando o WhatsAppMediaService
+            $mediaService = app(WhatsAppMediaService::class);
+            $savedImage = $mediaService->saveImageFromBase64($imageData, $caption);
+            
+            if (!$savedImage) {
+                return [
+                    'message' => "❌ Erro ao salvar a imagem. Tente novamente.\n\n" .
+                               "📊 Fotos já adicionadas: {$currentCount}",
+                    'menu' => 'register_ocorrencia_photos'
+                ];
+            }
+            
+            // Salva a foto da ocorrência
+            OccurrencePhoto::create([
+                'occurrence_id' => $occurrenceId,
+                'filename' => $savedImage['filename'],
+                'original_filename' => $savedImage['original_filename'],
+                'path' => $savedImage['path'],
+                'mime_type' => $savedImage['mime_type'],
+                'size' => $savedImage['size'],
+                'caption' => $caption ?: 'Sem legenda'
+            ]);
+            
+            // Atualiza contador de fotos
+            $newCount = $currentCount + 1;
+            $this->redisSessionService->setSessionData($phone, 'photos_count', $newCount);
+            
+            $captionText = $caption ? "'{$caption}'" : 'sem legenda';
+            
+            return [
+                'message' => "✅ Foto {$newCount} salva com sucesso!\n\n" .
+                           "📝 Legenda: {$captionText}\n" .
+                           "📊 Total de fotos: {$newCount}\n\n" .
+                           "📷 Continue enviando fotos ou digite '1' para finalizar.",
+                'menu' => 'register_ocorrencia_photos'
+            ];
+            
+        } catch (\Exception $e) {
+            Log::error('Erro ao adicionar foto à ocorrência:', [
+                'error' => $e->getMessage(),
+                'occurrence_id' => $occurrenceId,
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return [
+                'message' => "❌ Erro interno ao processar a imagem. Tente novamente.",
+                'menu' => 'register_ocorrencia_photos'
+            ];
+        }
+    }
+
+    private function finalizeOccurrence($phone, $occurrenceId, $photosCount)
+    {
+        try {
+            $occurrence = Occurrence::with(['vehicleUsage.user', 'vehicleUsage.vehicle', 'photos'])->find($occurrenceId);
+            
+            if (!$occurrence) {
+                $this->redisSessionService->deleteSession($phone);
+                return [
+                    'message' => "❌ Erro: Ocorrência não encontrada.",
+                    'menu' => 'main_menu'
+                ];
+            }
+            
+            // Notificar supervisores sobre a ocorrência finalizada
+            $photoText = $photosCount > 0 ? "\n📸 {$photosCount} foto(s) anexada(s)" : "\n📸 Nenhuma foto anexada";
+            
+            $this->notifySupervisors(
+                "⚠️ OCORRÊNCIA FINALIZADA\n\n" .
+                "👤 Usuário: {$occurrence->vehicleUsage->user->name}\n" .
+                "📱 Telefone: {$occurrence->vehicleUsage->user->phone}\n" .
+                "🚙 Veículo: {$occurrence->vehicleUsage->vehicle->brand} {$occurrence->vehicleUsage->vehicle->model}\n" .
+                "🏷️ Placa: {$occurrence->vehicleUsage->vehicle->plate}\n" .
+                "📝 Descrição: {$occurrence->description}" .
+                $photoText . "\n" .
+                "🕐 Horário: " . $occurrence->created_at->format('d/m/Y H:i')
+            );
+            
+            $this->redisSessionService->deleteSession($phone);
+            
+            return [
+                'message' => "✅ Ocorrência registrada com sucesso!\n\n" .
+                           "📝 Descrição: {$occurrence->description}\n" .
+                           "📸 Fotos anexadas: {$photosCount}\n" .
+                           "🚗 Veículo: {$occurrence->vehicleUsage->vehicle->brand} {$occurrence->vehicleUsage->vehicle->model}\n" .
+                           "🏷️ Placa: {$occurrence->vehicleUsage->vehicle->plate}\n" .
+                           "🕐 Data/Hora: " . $occurrence->created_at->format('d/m/Y H:i') . "\n\n" .
+                           "Obrigado pelo registro! 📋",
+                'menu' => 'none'
+            ];
+            
+        } catch (\Exception $e) {
+            Log::error('Erro ao finalizar ocorrência:', [
+                'error' => $e->getMessage(),
+                'occurrence_id' => $occurrenceId,
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            $this->redisSessionService->deleteSession($phone);
+            return [
+                'message' => "❌ Erro interno ao finalizar ocorrência. Tente novamente.",
+                'menu' => 'main_menu'
+            ];
+        }
+    }
+
+    private function cancelOccurrence($phone, $occurrenceId)
+    {
+        try {
+            $occurrence = Occurrence::with(['photos'])->find($occurrenceId);
+            
+            if (!$occurrence) {
+                $this->redisSessionService->deleteSession($phone);
+                return [
+                    'message' => "❌ Erro: Ocorrência não encontrada.",
+                    'menu' => 'main_menu'
+                ];
+            }
+            
+            // Deletar todas as fotos físicas do storage
+            $mediaService = app(WhatsAppMediaService::class);
+            foreach ($occurrence->photos as $photo) {
+                $mediaService->deletePhoto($photo->path);
+            }
+            
+            // Deletar a ocorrência (cascade vai deletar as fotos do banco)
+            $occurrence->delete();
+            
+            // Limpar sessão
+            $this->redisSessionService->deleteSession($phone);
+            
+            Log::info('Ocorrência cancelada pelo usuário:', [
+                'occurrence_id' => $occurrenceId,
+                'phone' => $phone,
+                'photos_deleted' => $occurrence->photos->count()
+            ]);
+            
+            return [
+                'message' => "🗑️ Ocorrência cancelada com sucesso!\n\n" .
+                           "📝 Descrição: {$occurrence->description}\n" .
+                           "📸 {$occurrence->photos->count()} foto(s) removida(s)\n" .
+                           "🚮 Todos os dados foram apagados\n\n" .
+                           "Voltando ao menu principal...",
+                'menu' => 'main_menu',
+                'send_menu_next' => true
+            ];
+            
+        } catch (\Exception $e) {
+            Log::error('Erro ao cancelar ocorrência:', [
+                'error' => $e->getMessage(),
+                'occurrence_id' => $occurrenceId,
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            $this->redisSessionService->deleteSession($phone);
+            return [
+                'message' => "❌ Erro interno ao cancelar ocorrência. Sessão limpa.",
+                'menu' => 'main_menu'
+            ];
+        }
     }
 } 

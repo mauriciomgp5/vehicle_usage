@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class VehicleUsage extends Model
 {
@@ -24,13 +26,18 @@ class VehicleUsage extends Model
         'final_km' => 'decimal:2'
     ];
 
-    public function vehicle()
+    public function vehicle(): BelongsTo
     {
         return $this->belongsTo(Vehicle::class);
     }
 
-    public function user()
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function occurrences(): HasMany
+    {
+        return $this->hasMany(Occurrence::class);
     }
 }

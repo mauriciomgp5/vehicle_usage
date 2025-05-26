@@ -66,14 +66,16 @@ class TopVehiclesWidget extends BaseWidget
                     ->label('Status')
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
-                        'ativo' => 'success',
-                        'inativo' => 'gray',
-                        'manutencao' => 'warning',
+                        'active' => 'success',
+                        'inactive' => 'gray',
+                        'maintenance' => 'warning',
+                        default => 'gray',
                     })
                     ->formatStateUsing(fn (string $state): string => match ($state) {
-                        'ativo' => 'Ativo',
-                        'inativo' => 'Inativo', 
-                        'manutencao' => 'Manutenção',
+                        'active' => 'Ativo',
+                        'inactive' => 'Inativo', 
+                        'maintenance' => 'Manutenção',
+                        default => $state,
                     }),
             ])
             ->defaultSort('usages_this_month_count', 'desc')

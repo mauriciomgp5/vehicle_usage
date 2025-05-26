@@ -77,18 +77,75 @@ class EvolutionWebhookController extends Controller
 
             if (isset($message['key']['fromMe']) && !$message['key']['fromMe']) {
                 $phone = $message['key']['remoteJid'];
-                $messageContent = $message['message']['conversation'] ?? 
-                                $message['message']['extendedTextMessage']['text'] ?? 
-                                '';
+                
+                // Extrair conteúdo da mensagem (texto ou imagem)
+                $messageContent = '';
+                $messageType = 'text';
+                $mediaId = null;
+                $caption = null;
+                $imageData = null;
+                
+                // Mensagem de texto
+                if (isset($message['message']['conversation'])) {
+                    $messageContent = $message['message']['conversation'];
+                } elseif (isset($message['message']['extendedTextMessage']['text'])) {
+                    $messageContent = $message['message']['extendedTextMessage']['text'];
+                }
+                // Mensagem de imagem
+                elseif (isset($message['message']['imageMessage'])) {
+                    $messageType = 'image';
+                    $mediaId = $message['key']['id'];
+                    $caption = $message['message']['imageMessage']['caption'] ?? '';
+                    $messageContent = $caption; // Usa a legenda como conteúdo
+                    
+                    // LOG DETALHADO DA IMAGEM - ESTRUTURA COMPLETA
+                    Log::info('🖼️ IMAGEM DETECTADA - ESTRUTURA COMPLETA:', [
+                        'phone' => $phone,
+                        'mediaId' => $mediaId,
+                        'caption' => $caption,
+                        'imageMessage_completa' => $message['message']['imageMessage'],
+                        'message_keys' => array_keys($message['message']),
+                        'has_base64_in_message' => isset($message['message']['base64']),
+                        'has_base64_in_imageMessage' => isset($message['message']['imageMessage']['base64'])
+                    ]);
+                    
+                    // CORREÇÃO: base64 está em message.base64, não em imageMessage.base64
+                    $imageData = [
+                        'base64' => $message['message']['base64'] ?? null, // ✅ CORRIGIDO!
+                        'mimetype' => $message['message']['imageMessage']['mimetype'] ?? 'image/jpeg',
+                        'filename' => $message['message']['imageMessage']['filename'] ?? 'image.jpg'
+                    ];
+                    
+                    // LOG ESPECÍFICO DOS DADOS EXTRAÍDOS
+                    Log::info('📋 DADOS EXTRAÍDOS DA IMAGEM:', [
+                        'phone' => $phone,
+                        'mediaId' => $mediaId,
+                        'caption' => $caption,
+                        'hasBase64' => !empty($imageData['base64']),
+                        'base64Length' => !empty($imageData['base64']) ? strlen($imageData['base64']) : 0,
+                        'base64Preview' => !empty($imageData['base64']) ? substr($imageData['base64'], 0, 50) . '...' : 'VAZIO',
+                        'mimetype' => $imageData['mimetype'],
+                        'filename' => $imageData['filename']
+                    ]);
+                }
 
                 Log::info('Dados extraídos da mensagem:', [
                     'phone' => $phone,
-                    'messageContent' => $messageContent
+                    'messageContent' => $messageContent,
+                    'messageType' => $messageType,
+                    'mediaId' => $mediaId
                 ]);
 
-                if (!empty($messageContent)) {
+                if (!empty($messageContent) || $messageType === 'image') {
                     try {
-                        $response = $this->menuService->handleUserResponse($phone, $messageContent);
+                        $response = $this->menuService->handleUserResponse(
+                            $phone, 
+                            $messageContent, 
+                            $messageType, 
+                            $mediaId, 
+                            $caption,
+                            $imageData
+                        );
                         
                         Log::info('Resposta do MenuService:', [
                             'response' => $response
