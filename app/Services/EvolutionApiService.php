@@ -54,35 +54,35 @@ class EvolutionApiService
             $instance = config('services.evolution_api.instance', '999999999');
             $url = "{$this->baseUrl}/message/sendText/{$instance}";
 
-            Log::info('Enviando mensagem para Evolution API:', [
-                'url' => $url,
-                'payload' => $payload
-            ]);
+            // Log::info('Enviando mensagem para Evolution API:', [
+            //     'url' => $url,
+            //     'payload' => $payload
+            // ]);
 
             $response = Http::withHeaders([
                 'apikey' => $this->apiKey
             ])->post($url, $payload);
 
             if ($response->successful()) {
-                Log::info('Mensagem enviada com sucesso:', [
-                    'phone' => $phone,
-                    'response' => $response->json()
-                ]);
+                // Log::info('Mensagem enviada com sucesso:', [
+                //     'phone' => $phone,
+                //     'response' => $response->json()
+                // ]);
                 return true;
             }
 
-            Log::error('Erro ao enviar mensagem:', [
-                'phone' => $phone,
-                'error' => $response->json(),
-                'status' => $response->status()
-            ]);
+            // Log::error('Erro ao enviar mensagem:', [
+            //     'phone' => $phone,
+            //     'error' => $response->json(),
+            //     'status' => $response->status()
+            // ]);
             return false;
         } catch (\Exception $e) {
-            Log::error('Exceção ao enviar mensagem:', [
-                'phone' => $phone,
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
+            // Log::error('Exceção ao enviar mensagem:', [
+            //     'phone' => $phone,
+            //     'error' => $e->getMessage(),
+            //     'trace' => $e->getTraceAsString()
+            // ]);
             return false;
         }
     }

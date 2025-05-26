@@ -20,7 +20,7 @@ class MenuService
                         "2️⃣ - Devolver Veículo\n" .
                         "3️⃣ - Consultar Status\n" .
                         "0️⃣ - Voltar ao Menu Principal\n\n" .
-                        "❌ Para limpar sessão, digite /clear",
+                        "❌ Para limpar sessão, digite /sair",
             'options' => [
                 '1' => 'register_departure',
                 '2' => 'register_return',
@@ -31,45 +31,45 @@ class MenuService
         'register_departure' => [
             'message' => "🚗 RETIRADA DE VEÍCULO\n\n" .
                         "📝 Por favor, informe a placa do veículo:\n\n" .
-                        "💡 Dicas:\n" .
-                        "• Digite parte da placa (ex: ABC, 1234)\n" .
-                        "• Verifique se a placa está correta\n\n" .
-                        "❌ Para cancelar, digite /clear",
+                        "❌ Para cancelar, digite /sair",
             'options' => []
         ],
         'register_return' => [
             'message' => "🚗 DEVOLUÇÃO DE VEÍCULO\n\n" .
                         "📝 Por favor, informe a placa do veículo:\n\n" .
-                        "💡 Dicas:\n" .
-                        "• Digite parte da placa (ex: ABC, 1234)\n" .
-                        "• Verifique se a placa está correta\n\n" .
-                        "❌ Para cancelar, digite /clear",
+                        "❌ Para cancelar, digite /sair",
             'options' => []
         ],
         'check_status' => [
             'message' => "🔍 CONSULTA DE STATUS\n\n" .
                         "📝 Por favor, informe a placa do veículo:\n\n" .
-                        "💡 Dicas:\n" .
-                        "• Digite parte da placa (ex: ABC, 1234)\n" .
-                        "• Verifique se a placa está correta\n\n" .
-                        "❌ Para cancelar, digite /clear",
+                        "❌ Para cancelar, digite /sair",
             'options' => []
         ],
         'select_vehicle' => [
             'message' => "🚗 SELEÇÃO DE VEÍCULO\n\n" .
                         "📋 Selecione o número do veículo desejado:\n\n" .
                         "💡 Dica: Digite apenas o número correspondente ao veículo\n\n" .
-                        "❌ Para cancelar, digite /clear",
+                        "❌ Para cancelar, digite /sair",
             'options' => []
         ],
         'ask_km' => [
             'message' => "🚗 REGISTRO DE QUILOMETRAGEM\n\n" .
                         "📊 Por favor, informe o KM do veículo:\n\n" .
                         "💡 Dicas:\n" .
-                        "• Verifique o painel do veículo\n" .
                         "• Digite apenas números\n" .
                         "• Use ponto para decimais (ex: 12345.6)\n\n" .
-                        "❌ Para cancelar, digite /clear",
+                        "❌ Para cancelar, digite /sair",
+            'options' => []
+        ],
+        'ask_purpose' => [
+            'message' => "🎯 MOTIVO DE UTILIZAÇÃO\n\n" .
+                        "📝 Por favor, informe o motivo da utilização do veículo:\n\n" .
+                        "💡 Exemplos:\n" .
+                        "• Carro fixo de trabalho\n" .
+                        "• Visita evento ...\n" .
+                        "• Transporte de materiais ...\n\n" .
+                        "❌ Para cancelar, digite /sair",
             'options' => []
         ],
         'active_usage_menu' => [
@@ -78,7 +78,7 @@ class MenuService
                         "1️⃣ - Devolver veículo\n" .
                         "2️⃣ - Registrar ocorrência\n\n" .
                         "💡 Dica: Se houver algum problema com o veículo, registre uma ocorrência antes de devolvê-lo.\n\n" .
-                        "❌ Para cancelar, digite /clear",
+                        "❌ Para cancelar, digite /sair",
             'options' => [
                 '1' => 'return_km',
                 '2' => 'register_ocorrencia'
@@ -91,7 +91,7 @@ class MenuService
                         "• Verifique o painel do veículo\n" .
                         "• Digite apenas números\n" .
                         "• Use ponto para decimais (ex: 12345.6)\n\n" .
-                        "❌ Para cancelar, digite /clear",
+                        "❌ Para cancelar, digite /sair",
             'options' => []
         ],
         'confirm_return' => [
@@ -99,7 +99,7 @@ class MenuService
                         "📋 Confirme os dados para registrar a devolução:\n\n" .
                         "1️⃣ - CONFIRMAR\n" .
                         "0️⃣ - CANCELAR\n\n" .
-                        "❌ Para cancelar, digite /clear",
+                        "❌ Para cancelar, digite /sair",
             'options' => []
         ],
         'register_ocorrencia' => [
@@ -109,7 +109,7 @@ class MenuService
                         "• Seja claro e objetivo\n" .
                         "• Exemplos: 'Pneu furou', 'Arranhão lateral'\n" .
                         "• Descreva o problema com detalhes\n\n" .
-                        "❌ Para cancelar, digite /clear",
+                        "❌ Para cancelar, digite /sair",
             'options' => []
         ],
         'register_ocorrencia_photos' => [
@@ -121,7 +121,7 @@ class MenuService
                         "• Envie fotos da ocorrência (uma por vez)\n" .
                         "• Adicione uma legenda para cada foto\n" .
                         "• Envie quantas fotos forem necessárias\n\n" .
-                        "❌ Para cancelar, digite /clear",
+                        "❌ Para cancelar, digite /sair",
             'options' => [
                 '1' => 'finalize_occurrence',
                 '2' => 'cancel_occurrence'
@@ -134,7 +134,7 @@ class MenuService
                         "• Digite seu nome completo\n" .
                         "• Exemplo: João da Silva\n" .
                         "• Mínimo 2 caracteres\n\n" .
-                        "❌ Para cancelar, digite /clear",
+                        "❌ Para cancelar, digite /sair",
             'options' => []
         ],
         'confirm_checkout' => [
@@ -142,7 +142,7 @@ class MenuService
                         "📋 Confirme os dados para registrar a saída:\n\n" .
                         "1️⃣ - CONFIRMAR\n" .
                         "0️⃣ - CANCELAR\n\n" .
-                        "❌ Para cancelar, digite /clear",
+                        "❌ Para cancelar, digite /sair",
             'options' => []
         ]
     ];
@@ -198,16 +198,16 @@ class MenuService
                     "🚨 MONITORAMENTO DE FROTA 🚨\n\n" . $message
                 );
                 
-                Log::info('Notificação enviada para supervisor:', [
-                    'supervisor' => $supervisor->name,
-                    'phone' => $supervisor->phone,
-                    'message' => $message
-                ]);
+                // Log::info('Notificação enviada para supervisor:', [
+                //     'supervisor' => $supervisor->name,
+                //     'phone' => $supervisor->phone,
+                //     'message' => $message
+                // ]);
             } catch (\Exception $e) {
-                Log::error('Erro ao notificar supervisor:', [
-                    'supervisor' => $supervisor->name,
-                    'error' => $e->getMessage()
-                ]);
+                // Log::error('Erro ao notificar supervisor:', [
+                //     'supervisor' => $supervisor->name,
+                //     'error' => $e->getMessage()
+                // ]);
             }
         }
     }
@@ -217,7 +217,7 @@ class MenuService
         $cleanPhone = $this->cleanPhone($phone);
         
         // Comando especial para limpar sessão
-        if (trim(strtolower($message)) === '/clear') {
+        if (trim(strtolower($message)) === '/sair') {
             $this->redisSessionService->deleteSession($phone);
             $this->redisSessionService->updateMenu($phone, 'main_menu');
             return [
@@ -229,12 +229,12 @@ class MenuService
         $currentMenu = $this->redisSessionService->getCurrentMenu($phone);
         $session = $this->redisSessionService->getSession($phone);
         
-        Log::info('DEBUG handleUserResponse:', [
-            'phone' => $phone,
-            'message' => $message,
-            'currentMenu' => $currentMenu,
-            'session' => $session
-        ]);
+        // Log::info('DEBUG handleUserResponse:', [
+        //     'phone' => $phone,
+        //     'message' => $message,
+        //     'currentMenu' => $currentMenu,
+        //     'session' => $session
+        // ]);
 
         // Se está aguardando o nome, criar usuário e seguir
         if ($currentMenu === 'ask_name') {
@@ -281,7 +281,18 @@ class MenuService
             if ($active) {
                 $this->redisSessionService->updateMenu($phone, 'active_usage_menu');
                 return [
-                    'message' => $this->getMenuMessage('active_usage_menu'),
+                    'message' => "🚗 VEÍCULO EM USO\n\n" .
+                               "📋 Informações do uso atual:\n" .
+                               "🚙 Veículo: {$active->vehicle->brand} {$active->vehicle->model}\n" .
+                               "🏷️ Placa: {$active->vehicle->plate}\n" .
+                               "🎯 Motivo: {$active->purpose}\n" .
+                               "📊 KM inicial: {$active->initial_km}\n" .
+                               "🕐 Saída: " . $active->checkout_at->format('d/m/Y H:i') . "\n\n" .
+                               "📋 Opções disponíveis:\n\n" .
+                               "1️⃣ - Devolver veículo\n" .
+                               "2️⃣ - Registrar ocorrência\n\n" .
+                               "💡 Dica: Se houver algum problema com o veículo, registre uma ocorrência antes de devolvê-lo.\n\n" .
+                               "❌ Para cancelar, digite /sair",
                     'menu' => 'active_usage_menu'
                 ];
             }
@@ -293,9 +304,6 @@ class MenuService
             if ($veiculos->count() === 0) {
                 return [
                     'message' => "❌ Nenhum veículo encontrado com essa placa.\n\n" .
-                               "💡 Dicas:\n" .
-                               "• Digite parte da placa (ex: ABC, 1234, DEF1234)\n" .
-                               "• Verifique se a placa está correta\n\n" .
                                "Por favor, tente novamente:",
                     'menu' => $currentMenu
                 ];
@@ -345,7 +353,7 @@ class MenuService
 
         // Se está pedindo o KM, mostra confirmação antes de registrar
         if ($currentMenu === 'ask_km') {
-            Log::info('DEBUG: Entrando no ask_km com message: ' . $message);
+            // Log::info('DEBUG: Entrando no ask_km com message: ' . $message);
             $km = floatval($message);
             $vehicleId = $this->redisSessionService->getSessionData($phone, 'vehicle_id');
             $veiculo = Vehicle::find($vehicleId);
@@ -366,14 +374,44 @@ class MenuService
             
             // Salva o KM para usar na confirmação
             $this->redisSessionService->setSessionData($phone, 'initial_km', $km);
+            $this->redisSessionService->updateMenu($phone, 'ask_purpose');
+            
+            // Log::info('DEBUG: Mudando menu para ask_purpose');
+            
+            return [
+                'message' => $this->getMenuMessage('ask_purpose'),
+                'menu' => 'ask_purpose'
+            ];
+        }
+
+        // Se está pedindo o motivo de uso, mostra confirmação antes de registrar
+        if ($currentMenu === 'ask_purpose') {
+            $purpose = trim($message);
+            
+            // Validação mínima do motivo
+            if (strlen($purpose) < 5) {
+                return [
+                    'message' => "❌ Motivo muito curto.\n\n" .
+                               "Por favor, descreva o motivo com mais detalhes (mínimo 5 caracteres):",
+                    'menu' => 'ask_purpose'
+                ];
+            }
+            
+            // Salva o motivo para usar na confirmação
+            $this->redisSessionService->setSessionData($phone, 'purpose', $purpose);
             $this->redisSessionService->updateMenu($phone, 'confirm_checkout');
             
-            Log::info('DEBUG: Mudando menu para confirm_checkout');
+            $vehicleId = $this->redisSessionService->getSessionData($phone, 'vehicle_id');
+            $km = $this->redisSessionService->getSessionData($phone, 'initial_km');
+            $veiculo = Vehicle::find($vehicleId);
+            
+            // Log::info('DEBUG: Mudando menu para confirm_checkout');
             
             return [
                 'message' => "📋 Confirme os dados para registrar a saída:\n\n" .
                            "🚗 Veículo: {$veiculo->brand} {$veiculo->model} ({$veiculo->plate})\n" .
                            "📊 KM inicial: {$km}\n" .
+                           "🎯 Motivo: {$purpose}\n" .
                            "🕐 Data/Hora: " . now()->format('d/m/Y H:i') . "\n\n" .
                            "1 - ✅ CONFIRMAR\n" .
                            "0 - ❌ CANCELAR",
@@ -390,13 +428,14 @@ class MenuService
                 $vehicleId = $this->redisSessionService->getSessionData($phone, 'vehicle_id');
                 $km = $this->redisSessionService->getSessionData($phone, 'initial_km');
                 $veiculo = Vehicle::find($vehicleId);
+                $purpose = $this->redisSessionService->getSessionData($phone, 'purpose');
                 
                 VehicleUsage::create([
                     'user_id' => $userId,
                     'vehicle_id' => $veiculo->id,
                     'initial_km' => $km,
                     'checkout_at' => now(),
-                    'purpose' => '',
+                    'purpose' => $purpose,
                 ]);
                 
                 // Notificar supervisores sobre a saída
@@ -408,6 +447,7 @@ class MenuService
                     "🚙 Veículo: {$veiculo->brand} {$veiculo->model}\n" .
                     "🏷️ Placa: {$veiculo->plate}\n" .
                     "📊 KM inicial: {$km}\n" .
+                    "🎯 Motivo: {$purpose}\n" .
                     "🕐 Horário: " . now()->format('d/m/Y H:i')
                 );
                 
@@ -416,6 +456,7 @@ class MenuService
                     'message' => "✅ Saída registrada com sucesso!\n\n" .
                                "🚗 Veículo: {$veiculo->brand} {$veiculo->model} ({$veiculo->plate})\n" .
                                "📊 KM inicial: {$km}\n" .
+                               "🎯 Motivo: {$purpose}\n" .
                                "🕐 Horário: " . now()->format('d/m/Y H:i') . "\n\n" .
                                "Boa viagem! 🛣️",
                     'menu' => 'none'
@@ -481,16 +522,17 @@ class MenuService
                 $this->redisSessionService->setSessionData($phone, 'final_km', $kmFinal);
                 $this->redisSessionService->updateMenu($phone, 'confirm_return');
                 
-                Log::info('DEBUG: Mudando para confirm_return', [
-                    'phone' => $phone,
-                    'final_km' => $kmFinal,
-                    'new_menu' => 'confirm_return'
-                ]);
+                // Log::info('DEBUG: Mudando para confirm_return', [
+                //     'phone' => $phone,
+                //     'final_km' => $kmFinal,
+                //     'new_menu' => 'confirm_return'
+                // ]);
                 
                 return [
                     'message' => "📋 Confirme os dados para registrar a devolução:\n\n" .
                                "🚗 Veículo: {$active->vehicle->brand} {$active->vehicle->model}\n" .
                                "🏷️ Placa: {$active->vehicle->plate}\n" .
+                               "🎯 Motivo: {$active->purpose}\n" .
                                "📊 KM inicial: {$kmInicial}\n" .
                                "📊 KM final: {$kmFinal}\n" .
                                "📏 Distância percorrida: " . ($kmFinal - $kmInicial) . " km\n" .
@@ -498,7 +540,7 @@ class MenuService
                                "🕐 Data/Hora: " . now()->format('d/m/Y H:i') . "\n\n" .
                                "1️⃣ - CONFIRMAR\n" .
                                "0️⃣ - CANCELAR\n\n" .
-                               "❌ Para cancelar, digite /clear",
+                               "❌ Para cancelar, digite /sair",
                     'menu' => 'confirm_return'
                 ];
             }
@@ -507,7 +549,7 @@ class MenuService
         // Confirmação da devolução
         if ($currentMenu === 'confirm_return') {
             $response = trim($message);
-            Log::info('Confirm return response:', ['response' => $response, 'currentMenu' => $currentMenu]);
+            // Log::info('Confirm return response:', ['response' => $response, 'currentMenu' => $currentMenu]);
             
             if ($response === '1') {
                 // Confirma - registra a devolução
@@ -527,6 +569,8 @@ class MenuService
                         "📱 Telefone: {$active->user->phone}\n" .
                         "🚙 Veículo: {$active->vehicle->brand} {$active->vehicle->model}\n" .
                         "🏷️ Placa: {$active->vehicle->plate}\n" .
+                        "🎯 Motivo: {$active->purpose}\n" .
+                        "📊 KM inicial: {$kmInicial}\n" .
                         "📊 KM final: {$kmFinal}\n" .
                         "📏 Distância: " . ($kmFinal - $kmInicial) . " km\n" .
                         "🕐 Horário: " . now()->format('d/m/Y H:i')
@@ -537,6 +581,7 @@ class MenuService
                         'message' => "✅ DEVOLUÇÃO REGISTRADA COM SUCESSO!\n\n" .
                                    "🚗 Veículo: {$active->vehicle->brand} {$active->vehicle->model}\n" .
                                    "🏷️ Placa: {$active->vehicle->plate}\n" .
+                                   "🎯 Motivo: {$active->purpose}\n" .
                                    "📊 KM inicial: {$kmInicial}\n" .
                                    "📊 KM final: {$kmFinal}\n" .
                                    "📏 Distância percorrida: " . ($kmFinal - $kmInicial) . " km\n" .
@@ -549,7 +594,7 @@ class MenuService
                     ];
                 }
             } elseif ($response === '0') {
-                Log::info('Cancelando devolução...');
+                // Log::info('Cancelando devolução...');
                 // Cancela - volta ao menu de uso ativo
                 $active = $this->checkActiveUsage($userId);
                 
@@ -558,7 +603,7 @@ class MenuService
                 $this->redisSessionService->updateMenu($phone, 'active_usage_menu');
                 
                 if ($active) {
-                    Log::info('Veículo em uso encontrado:', ['vehicle' => $active->vehicle->plate]);
+                    // Log::info('Veículo em uso encontrado:', ['vehicle' => $active->vehicle->plate]);
                     return [
                         'message' => "❌ Devolução cancelada.\n\n" .
                                    "🚗 Veículo: {$active->vehicle->brand} {$active->vehicle->model}\n" .
@@ -568,7 +613,7 @@ class MenuService
                     ];
                 }
                 
-                Log::info('Nenhum veículo em uso encontrado');
+                // Log::info('Nenhum veículo em uso encontrado');
                 return [
                     'message' => "❌ Devolução cancelada.\n\n" . $this->getMenuMessage('active_usage_menu'),
                     'menu' => 'active_usage_menu'
@@ -718,11 +763,11 @@ class MenuService
             ];
             
         } catch (\Exception $e) {
-            Log::error('Erro ao adicionar foto à ocorrência:', [
-                'error' => $e->getMessage(),
-                'occurrence_id' => $occurrenceId,
-                'trace' => $e->getTraceAsString()
-            ]);
+            // Log::error('Erro ao adicionar foto à ocorrência:', [
+            //     'error' => $e->getMessage(),
+            //     'occurrence_id' => $occurrenceId,
+            //     'trace' => $e->getTraceAsString()
+            // ]);
             
             return [
                 'message' => "❌ Erro interno ao processar a imagem. Tente novamente.",
@@ -772,11 +817,11 @@ class MenuService
             ];
             
         } catch (\Exception $e) {
-            Log::error('Erro ao finalizar ocorrência:', [
-                'error' => $e->getMessage(),
-                'occurrence_id' => $occurrenceId,
-                'trace' => $e->getTraceAsString()
-            ]);
+            // Log::error('Erro ao finalizar ocorrência:', [
+            //     'error' => $e->getMessage(),
+            //     'occurrence_id' => $occurrenceId,
+            //     'trace' => $e->getTraceAsString()
+            // ]);
             
             $this->redisSessionService->deleteSession($phone);
             return [
@@ -811,11 +856,11 @@ class MenuService
             // Limpar sessão
             $this->redisSessionService->deleteSession($phone);
             
-            Log::info('Ocorrência cancelada pelo usuário:', [
-                'occurrence_id' => $occurrenceId,
-                'phone' => $phone,
-                'photos_deleted' => $occurrence->photos->count()
-            ]);
+            // Log::info('Ocorrência cancelada pelo usuário:', [
+            //     'occurrence_id' => $occurrenceId,
+            //     'phone' => $phone,
+            //     'photos_deleted' => $occurrence->photos->count()
+            // ]);
             
             return [
                 'message' => "🗑️ Ocorrência cancelada com sucesso!\n\n" .
@@ -828,11 +873,11 @@ class MenuService
             ];
             
         } catch (\Exception $e) {
-            Log::error('Erro ao cancelar ocorrência:', [
-                'error' => $e->getMessage(),
-                'occurrence_id' => $occurrenceId,
-                'trace' => $e->getTraceAsString()
-            ]);
+            // Log::error('Erro ao cancelar ocorrência:', [
+            //     'error' => $e->getMessage(),
+            //     'occurrence_id' => $occurrenceId,
+            //     'trace' => $e->getTraceAsString()
+            // ]);
             
             $this->redisSessionService->deleteSession($phone);
             return [
