@@ -73,10 +73,12 @@ class UserResource extends Resource
                         Forms\Components\Toggle::make('is_supervisor')
                             ->label('É Supervisor?')
                             ->helperText('Supervisores podem acessar relatórios avançados')
+                            ->disabled(fn () => !auth()->user()->is_supervisor)
                             ->default(false),
                         Forms\Components\Toggle::make('is_active')
                             ->label('Usuário Ativo')
                             ->helperText('Usuários inativos não podem acessar o sistema')
+                            ->disabled(fn () => !auth()->user()->is_supervisor)
                             ->default(true),
                     ])->columns(2),
                     
@@ -256,13 +258,17 @@ class UserResource extends Resource
                     ),
             ], layout: Tables\Enums\FiltersLayout::AboveContentCollapsible)
             ->actions([
-                Tables\Actions\ViewAction::make(),
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
+                Tables\Actions\ViewAction::make()
+                    ->visible(fn (User $record) => auth()->user()->is_supervisor || auth()->user()->id === $record->id),
+                Tables\Actions\EditAction::make()
+                    ->visible(fn (User $record) => auth()->user()->is_supervisor || auth()->user()->id === $record->id),
+                Tables\Actions\DeleteAction::make()
+                    ->visible(fn (User $record) => auth()->user()->is_supervisor && auth()->user()->id !== $record->id),
                 Tables\Actions\Action::make('toggle_active')
                     ->label(fn (User $record) => $record->is_active ? 'Desativar' : 'Ativar')
                     ->icon(fn (User $record) => $record->is_active ? 'heroicon-o-x-circle' : 'heroicon-o-check-circle')
                     ->color(fn (User $record) => $record->is_active ? 'danger' : 'success')
+                    ->visible(fn () => auth()->user()->is_supervisor)
                     ->requiresConfirmation()
                     ->modalHeading(fn (User $record) => $record->is_active ? 'Desativar Usuário' : 'Ativar Usuário')
                     ->modalDescription(fn (User $record) => $record->is_active 
@@ -277,25 +283,31 @@ class UserResource extends Resource
                     ->label('Redefinir Senha')
                     ->icon('heroicon-o-key')
                     ->color('warning')
+                    ->visible(fn (User $record) => auth()->user()->is_supervisor && auth()->user()->id !== $record->id)
                     ->form([
                         Forms\Components\TextInput::make('password')
                             ->label('Nova Senha')
                             ->password()
                             ->required()
                             ->minLength(8)
-                            ->maxLength(255),
+                            ->maxLength(255)
+                            ->helperText('A senha deve ter pelo menos 8 caracteres'),
                         Forms\Components\TextInput::make('password_confirmation')
                             ->label('Confirmar Nova Senha')
                             ->password()
                             ->required()
-                            ->same('password'),
+                            ->same('password')
+                            ->helperText('Digite a mesma senha para confirmar'),
                     ])
                     ->action(function (array $data, User $record): void {
                         $record->update([
                             'password' => Hash::make($data['password'])
                         ]);
                     })
-                    ->successNotificationTitle('Senha redefinida com sucesso!'),
+                    ->successNotificationTitle('Senha redefinida com sucesso!')
+                    ->modalHeading('Redefinir Senha do Usuário')
+                    ->modalDescription(fn (User $record) => "Você está redefinindo a senha do usuário: {$record->name}. Esta ação não pode ser desfeita.")
+                    ->requiresConfirmation(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -304,6 +316,7 @@ class UserResource extends Resource
                         ->label('Ativar Selecionados')
                         ->icon('heroicon-o-check-circle')
                         ->color('success')
+                        ->visible(fn () => auth()->user()->is_supervisor)
                         ->requiresConfirmation()
                         ->action(fn ($records) => $records->each->update(['is_active' => true]))
                         ->successNotificationTitle('Usuários ativados com sucesso!'),
@@ -311,6 +324,7 @@ class UserResource extends Resource
                         ->label('Desativar Selecionados')
                         ->icon('heroicon-o-x-circle')
                         ->color('danger')
+                        ->visible(fn () => auth()->user()->is_supervisor)
                         ->requiresConfirmation()
                         ->action(fn ($records) => $records->each->update(['is_active' => false]))
                         ->successNotificationTitle('Usuários desativados com sucesso!'),
@@ -345,6 +359,18 @@ class UserResource extends Resource
             ->persistSortInSession()
             ->persistFiltersInSession()
             ->poll('60s'); // Atualiza a cada 60 segundos
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        $query = parent::getEloquentQuery();
+        
+        // Se o usuário não for supervisor, só mostra o próprio registro
+        if (!auth()->user()->is_supervisor) {
+            $query->where('id', auth()->user()->id);
+        }
+        
+        return $query;
     }
 
     public static function getRelations(): array
