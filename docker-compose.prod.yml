@@ -1,0 +1,56 @@
+services:
+  app:
+    container_name: vehicle_app
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: Dockerfile
+    deploy:
+      resources:
+        limits:
+          memory: 3G
+    volumes:
+      - .:/var/www/
+    networks:
+      - vehicle-network
+
+  db:
+    container_name: vehicle_db
+    image: mysql:8.0
+    deploy:
+      resources:
+        limits:
+          memory: 3G
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_USER: ${DB_USERNAME}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - vehicle-network
+
+  redis:
+    container_name: vehicle_redis
+    image: redis:7-alpine
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 3G
+    volumes:
+      - redis_data:/data
+    networks:
+      - vehicle-network
+    command: redis-server --appendonly yes
+
+volumes:
+  db_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  vehicle-network:
+    driver: bridge
