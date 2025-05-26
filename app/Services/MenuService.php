@@ -94,6 +94,14 @@ class MenuService
                         "❌ Para cancelar, digite /clear",
             'options' => []
         ],
+        'confirm_return' => [
+            'message' => "✅ CONFIRMAÇÃO DE DEVOLUÇÃO\n\n" .
+                        "📋 Confirme os dados para registrar a devolução:\n\n" .
+                        "1️⃣ - CONFIRMAR\n" .
+                        "0️⃣ - CANCELAR\n\n" .
+                        "❌ Para cancelar, digite /clear",
+            'options' => []
+        ],
         'register_ocorrencia' => [
             'message' => "⚠️ REGISTRO DE OCORRÊNCIA\n\n" .
                         "📝 Por favor, descreva brevemente a ocorrência:\n\n" .
@@ -220,6 +228,13 @@ class MenuService
         
         $currentMenu = $this->redisSessionService->getCurrentMenu($phone);
         $session = $this->redisSessionService->getSession($phone);
+        
+        Log::info('DEBUG handleUserResponse:', [
+            'phone' => $phone,
+            'message' => $message,
+            'currentMenu' => $currentMenu,
+            'session' => $session
+        ]);
 
         // Se está aguardando o nome, criar usuário e seguir
         if ($currentMenu === 'ask_name') {
@@ -462,37 +477,112 @@ class MenuService
                     ];
                 }
                 
-                $active->final_km = $kmFinal;
-                $active->checkin_at = now();
-                $active->save();
+                // Salva o KM para usar na confirmação
+                $this->redisSessionService->setSessionData($phone, 'final_km', $kmFinal);
+                $this->redisSessionService->updateMenu($phone, 'confirm_return');
                 
-                // Notificar supervisores sobre o retorno
-                $this->notifySupervisors(
-                    "🏁 RETORNO DE VEÍCULO\n\n" .
-                    "👤 Usuário: {$active->user->name}\n" .
-                    "📱 Telefone: {$active->user->phone}\n" .
-                    "🚙 Veículo: {$active->vehicle->brand} {$active->vehicle->model}\n" .
-                    "🏷️ Placa: {$active->vehicle->plate}\n" .
-                    "📊 KM final: {$kmFinal}\n" .
-                    "📏 Distância: " . ($kmFinal - $kmInicial) . " km\n" .
-                    "🕐 Horário: " . now()->format('d/m/Y H:i')
-                );
+                Log::info('DEBUG: Mudando para confirm_return', [
+                    'phone' => $phone,
+                    'final_km' => $kmFinal,
+                    'new_menu' => 'confirm_return'
+                ]);
+                
+                return [
+                    'message' => "📋 Confirme os dados para registrar a devolução:\n\n" .
+                               "🚗 Veículo: {$active->vehicle->brand} {$active->vehicle->model}\n" .
+                               "🏷️ Placa: {$active->vehicle->plate}\n" .
+                               "📊 KM inicial: {$kmInicial}\n" .
+                               "📊 KM final: {$kmFinal}\n" .
+                               "📏 Distância percorrida: " . ($kmFinal - $kmInicial) . " km\n" .
+                               "⏱️ Tempo de uso: " . $active->checkout_at->diffForHumans(now()) . "\n" .
+                               "🕐 Data/Hora: " . now()->format('d/m/Y H:i') . "\n\n" .
+                               "1️⃣ - CONFIRMAR\n" .
+                               "0️⃣ - CANCELAR\n\n" .
+                               "❌ Para cancelar, digite /clear",
+                    'menu' => 'confirm_return'
+                ];
             }
-            $this->redisSessionService->deleteSession($phone);
-            return [
-                'message' => "✅ DEVOLUÇÃO REGISTRADA COM SUCESSO!\n\n" .
-                           "🚗 Veículo: {$active->vehicle->brand} {$active->vehicle->model}\n" .
-                           "🏷️ Placa: {$active->vehicle->plate}\n" .
-                           "📊 KM inicial: {$kmInicial}\n" .
-                           "📊 KM final: {$kmFinal}\n" .
-                           "📏 Distância percorrida: " . ($kmFinal - $kmInicial) . " km\n" .
-                           "⏱️ Tempo de uso: " . $active->checkout_at->diffForHumans($active->checkin_at) . "\n" .
-                           "🕐 Data/Hora: " . now()->format('d/m/Y H:i') . "\n\n" .
-                           "Obrigado por utilizar nosso sistema! 🙏\n" .
-                           "Voltando ao menu principal...",
-                'menu' => 'main_menu',
-                'send_menu_next' => true
-            ];
+        }
+
+        // Confirmação da devolução
+        if ($currentMenu === 'confirm_return') {
+            $response = trim($message);
+            Log::info('Confirm return response:', ['response' => $response, 'currentMenu' => $currentMenu]);
+            
+            if ($response === '1') {
+                // Confirma - registra a devolução
+                $active = $this->checkActiveUsage($userId);
+                if ($active) {
+                    $kmFinal = $this->redisSessionService->getSessionData($phone, 'final_km');
+                    $kmInicial = floatval($active->initial_km);
+                    
+                    $active->final_km = $kmFinal;
+                    $active->checkin_at = now();
+                    $active->save();
+                    
+                    // Notificar supervisores sobre o retorno
+                    $this->notifySupervisors(
+                        "🏁 RETORNO DE VEÍCULO\n\n" .
+                        "👤 Usuário: {$active->user->name}\n" .
+                        "📱 Telefone: {$active->user->phone}\n" .
+                        "🚙 Veículo: {$active->vehicle->brand} {$active->vehicle->model}\n" .
+                        "🏷️ Placa: {$active->vehicle->plate}\n" .
+                        "📊 KM final: {$kmFinal}\n" .
+                        "📏 Distância: " . ($kmFinal - $kmInicial) . " km\n" .
+                        "🕐 Horário: " . now()->format('d/m/Y H:i')
+                    );
+                    
+                    $this->redisSessionService->deleteSession($phone);
+                    return [
+                        'message' => "✅ DEVOLUÇÃO REGISTRADA COM SUCESSO!\n\n" .
+                                   "🚗 Veículo: {$active->vehicle->brand} {$active->vehicle->model}\n" .
+                                   "🏷️ Placa: {$active->vehicle->plate}\n" .
+                                   "📊 KM inicial: {$kmInicial}\n" .
+                                   "📊 KM final: {$kmFinal}\n" .
+                                   "📏 Distância percorrida: " . ($kmFinal - $kmInicial) . " km\n" .
+                                   "⏱️ Tempo de uso: " . $active->checkout_at->diffForHumans($active->checkin_at) . "\n" .
+                                   "🕐 Data/Hora: " . now()->format('d/m/Y H:i') . "\n\n" .
+                                   "Obrigado por utilizar nosso sistema! 🙏\n" .
+                                   "Voltando ao menu principal...",
+                        'menu' => 'main_menu',
+                        'send_menu_next' => true
+                    ];
+                }
+            } elseif ($response === '0') {
+                Log::info('Cancelando devolução...');
+                // Cancela - volta ao menu de uso ativo
+                $active = $this->checkActiveUsage($userId);
+                
+                // Limpa a sessão e atualiza o menu
+                $this->redisSessionService->deleteSession($phone);
+                $this->redisSessionService->updateMenu($phone, 'active_usage_menu');
+                
+                if ($active) {
+                    Log::info('Veículo em uso encontrado:', ['vehicle' => $active->vehicle->plate]);
+                    return [
+                        'message' => "❌ Devolução cancelada.\n\n" .
+                                   "🚗 Veículo: {$active->vehicle->brand} {$active->vehicle->model}\n" .
+                                   "🏷️ Placa: {$active->vehicle->plate}\n\n" .
+                                   $this->getMenuMessage('active_usage_menu'),
+                        'menu' => 'active_usage_menu'
+                    ];
+                }
+                
+                Log::info('Nenhum veículo em uso encontrado');
+                return [
+                    'message' => "❌ Devolução cancelada.\n\n" . $this->getMenuMessage('active_usage_menu'),
+                    'menu' => 'active_usage_menu'
+                ];
+            } else {
+                // Resposta inválida
+                return [
+                    'message' => "❓ Resposta inválida.\n\n" .
+                               "Por favor, digite:\n" .
+                               "1️⃣ - CONFIRMAR\n" .
+                               "0️⃣ - CANCELAR",
+                    'menu' => 'confirm_return'
+                ];
+            }
         }
 
         // Ocorrência: salva mensagem/foto, encerra sessão

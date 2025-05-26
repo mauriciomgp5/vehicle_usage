@@ -136,7 +136,7 @@ class EvolutionWebhookController extends Controller
                     'mediaId' => $mediaId
                 ]);
 
-                if (!empty($messageContent) || $messageType === 'image') {
+                if ($messageContent !== '' || $messageType === 'image') {
                     try {
                         $response = $this->menuService->handleUserResponse(
                             $phone, 
