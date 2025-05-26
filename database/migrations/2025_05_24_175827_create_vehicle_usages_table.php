@@ -17,8 +17,8 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
             $table->dateTime('checkout_at');
             $table->dateTime('checkin_at')->nullable();
-            $table->decimal('initial_km', 10, 2)->nullable();
-            $table->decimal('final_km', 10, 2)->nullable();
+            $table->decimal('initial_km', 12, 2)->nullable();
+            $table->decimal('final_km', 12, 2)->nullable();
             $table->text('purpose');
             $table->text('notes')->nullable();
             $table->timestamps();
