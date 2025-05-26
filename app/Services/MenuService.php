@@ -14,11 +14,13 @@ class MenuService
     protected $redisSessionService;
     private $menus = [
         'main_menu' => [
-            'message' => "Utilização de Veículo:\n\n" .
-                        "1 - Pegar Veículo\n" .
-                        "2 - Devolver Veículo\n" .
-                        "3 - Consultar Status\n" .
-                        "0 - Voltar ao Menu Principal",
+            'message' => "🚗 SISTEMA DE GESTÃO DE FROTA\n\n" .
+                        "📋 Menu Principal:\n\n" .
+                        "1️⃣ - Pegar Veículo\n" .
+                        "2️⃣ - Devolver Veículo\n" .
+                        "3️⃣ - Consultar Status\n" .
+                        "0️⃣ - Voltar ao Menu Principal\n\n" .
+                        "❌ Para limpar sessão, digite /clear",
             'options' => [
                 '1' => 'register_departure',
                 '2' => 'register_return',
@@ -27,61 +29,112 @@ class MenuService
             ]
         ],
         'register_departure' => [
-            'message' => "Por favor, informe a placa do veículo:",
+            'message' => "🚗 RETIRADA DE VEÍCULO\n\n" .
+                        "📝 Por favor, informe a placa do veículo:\n\n" .
+                        "💡 Dicas:\n" .
+                        "• Digite parte da placa (ex: ABC, 1234)\n" .
+                        "• Verifique se a placa está correta\n\n" .
+                        "❌ Para cancelar, digite /clear",
             'options' => []
         ],
         'register_return' => [
-            'message' => "Por favor, informe a placa do veículo:",
+            'message' => "🚗 DEVOLUÇÃO DE VEÍCULO\n\n" .
+                        "📝 Por favor, informe a placa do veículo:\n\n" .
+                        "💡 Dicas:\n" .
+                        "• Digite parte da placa (ex: ABC, 1234)\n" .
+                        "• Verifique se a placa está correta\n\n" .
+                        "❌ Para cancelar, digite /clear",
             'options' => []
         ],
         'check_status' => [
-            'message' => "Por favor, informe a placa do veículo:",
+            'message' => "🔍 CONSULTA DE STATUS\n\n" .
+                        "📝 Por favor, informe a placa do veículo:\n\n" .
+                        "💡 Dicas:\n" .
+                        "• Digite parte da placa (ex: ABC, 1234)\n" .
+                        "• Verifique se a placa está correta\n\n" .
+                        "❌ Para cancelar, digite /clear",
             'options' => []
         ],
         'select_vehicle' => [
-            'message' => "Selecione o número do veículo desejado:",
+            'message' => "🚗 SELEÇÃO DE VEÍCULO\n\n" .
+                        "📋 Selecione o número do veículo desejado:\n\n" .
+                        "💡 Dica: Digite apenas o número correspondente ao veículo\n\n" .
+                        "❌ Para cancelar, digite /clear",
             'options' => []
         ],
         'ask_km' => [
-            'message' => "Por favor, informe o KM inicial do veículo:",
+            'message' => "🚗 REGISTRO DE QUILOMETRAGEM\n\n" .
+                        "📊 Por favor, informe o KM do veículo:\n\n" .
+                        "💡 Dicas:\n" .
+                        "• Verifique o painel do veículo\n" .
+                        "• Digite apenas números\n" .
+                        "• Use ponto para decimais (ex: 12345.6)\n\n" .
+                        "❌ Para cancelar, digite /clear",
             'options' => []
         ],
         'active_usage_menu' => [
-            'message' => "Você possui um veículo em uso. O que deseja fazer?\n1 - Devolver veículo\n2 - Registrar ocorrência",
+            'message' => "🚗 VEÍCULO EM USO\n\n" .
+                        "📋 Opções disponíveis:\n\n" .
+                        "1️⃣ - Devolver veículo\n" .
+                        "2️⃣ - Registrar ocorrência\n\n" .
+                        "💡 Dica: Se houver algum problema com o veículo, registre uma ocorrência antes de devolvê-lo.\n\n" .
+                        "❌ Para cancelar, digite /clear",
             'options' => [
                 '1' => 'return_km',
                 '2' => 'register_ocorrencia'
             ]
         ],
         'return_km' => [
-            'message' => "Por favor, informe o KM final do veículo:",
+            'message' => "🚗 DEVOLUÇÃO DE VEÍCULO\n\n" .
+                        "📊 Por favor, informe o KM final do veículo:\n\n" .
+                        "💡 Dicas:\n" .
+                        "• Verifique o painel do veículo\n" .
+                        "• Digite apenas números\n" .
+                        "• Use ponto para decimais (ex: 12345.6)\n\n" .
+                        "❌ Para cancelar, digite /clear",
             'options' => []
         ],
         'register_ocorrencia' => [
-            'message' => "📝 Registrar Ocorrência\n\n" .
-                        "Por favor, descreva brevemente a ocorrência:\n\n" .
-                        "💡 Dica: Seja claro e objetivo\n" .
-                        "(Ex: 'Pneu furou', 'Arranhão lateral', etc.)",
+            'message' => "⚠️ REGISTRO DE OCORRÊNCIA\n\n" .
+                        "📝 Por favor, descreva brevemente a ocorrência:\n\n" .
+                        "💡 Dicas:\n" .
+                        "• Seja claro e objetivo\n" .
+                        "• Exemplos: 'Pneu furou', 'Arranhão lateral'\n" .
+                        "• Descreva o problema com detalhes\n\n" .
+                        "❌ Para cancelar, digite /clear",
             'options' => []
         ],
         'register_ocorrencia_photos' => [
-            'message' => "📸 Adicionar Fotos à Ocorrência\n\n" .
-                        "📷 Envie fotos da ocorrência (uma por vez)\n" .
-                        "💬 Adicione uma legenda para cada foto\n\n" .
-                        "📋 Menu:\n" .
-                        "1 - Finalizar registro\n" .
-                        "2 - Cancelar ocorrência",
+            'message' => "📸 REGISTRO DE FOTOS\n\n" .
+                        "📋 Opções disponíveis:\n\n" .
+                        "1️⃣ - Finalizar registro\n" .
+                        "2️⃣ - Cancelar ocorrência\n\n" .
+                        "💡 Dicas:\n" .
+                        "• Envie fotos da ocorrência (uma por vez)\n" .
+                        "• Adicione uma legenda para cada foto\n" .
+                        "• Envie quantas fotos forem necessárias\n\n" .
+                        "❌ Para cancelar, digite /clear",
             'options' => [
                 '1' => 'finalize_occurrence',
                 '2' => 'cancel_occurrence'
             ]
         ],
         'ask_name' => [
-            'message' => "👋 Olá! Para continuar, por favor informe seu nome completo:\n\n(Ex: João da Silva)",
+            'message' => "👋 BEM-VINDO AO SISTEMA\n\n" .
+                        "📝 Por favor, informe seu nome completo:\n\n" .
+                        "💡 Dicas:\n" .
+                        "• Digite seu nome completo\n" .
+                        "• Exemplo: João da Silva\n" .
+                        "• Mínimo 2 caracteres\n\n" .
+                        "❌ Para cancelar, digite /clear",
             'options' => []
         ],
         'confirm_checkout' => [
-            'message' => "Confirme os dados para registrar a saída:",
+            'message' => "✅ CONFIRMAÇÃO DE SAÍDA\n\n" .
+                        "📋 Confirme os dados para registrar a saída:\n\n" .
+                        "1️⃣ - CONFIRMAR\n" .
+                        "0️⃣ - CANCELAR\n\n" .
+                        "❌ Para cancelar, digite /clear",
             'options' => []
         ]
     ];
@@ -427,13 +480,18 @@ class MenuService
             }
             $this->redisSessionService->deleteSession($phone);
             return [
-                'message' => "✅ Devolução registrada com sucesso!\n\n" .
-                           "🚗 Veículo: {$active->vehicle->brand} {$active->vehicle->model} ({$active->vehicle->plate})\n" .
+                'message' => "✅ DEVOLUÇÃO REGISTRADA COM SUCESSO!\n\n" .
+                           "🚗 Veículo: {$active->vehicle->brand} {$active->vehicle->model}\n" .
+                           "🏷️ Placa: {$active->vehicle->plate}\n" .
+                           "📊 KM inicial: {$kmInicial}\n" .
                            "📊 KM final: {$kmFinal}\n" .
                            "📏 Distância percorrida: " . ($kmFinal - $kmInicial) . " km\n" .
-                           "🕐 Horário: " . now()->format('d/m/Y H:i') . "\n\n" .
-                           "Obrigado! 🙏",
-                'menu' => 'none'
+                           "⏱️ Tempo de uso: " . $active->checkout_at->diffForHumans($active->checkin_at) . "\n" .
+                           "🕐 Data/Hora: " . now()->format('d/m/Y H:i') . "\n\n" .
+                           "Obrigado por utilizar nosso sistema! 🙏\n" .
+                           "Voltando ao menu principal...",
+                'menu' => 'main_menu',
+                'send_menu_next' => true
             ];
         }
 
