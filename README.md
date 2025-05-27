@@ -638,6 +638,10 @@ refactor(widgets): otimiza queries dos widgets
 - **♿ Acessibilidade:** WCAG 2.1 AA compliance
 - **🧪 Cobertura de Testes:** 80%+ (meta)
 
+## 📹 Vídeo
+
+Você pode assistir ao vídeo [aqui](https://youtube.com/shorts/goDAjoZARqY?feature=share).
+
 ## 📝 Licença
 
 Este projeto está licenciado sob a **Licença MIT** - veja o arquivo [LICENSE](LICENSE) para detalhes completos.
@@ -668,7 +672,3 @@ Este projeto está licenciado sob a **Licença MIT** - veja o arquivo [LICENSE](
 ![GitHub watchers](https://img.shields.io/github/watchers/seu-usuario/vehicle-management?style=social)
 
 </div>
-
-## 📹 Vídeo
-
-Você pode assistir ao vídeo [aqui](https://youtube.com/shorts/goDAjoZARqY?feature=share).
