@@ -4,7 +4,7 @@ Sistema completo de gestão de veículos desenvolvido com **Laravel 12** e **Fil
 
 ![Laravel](https://img.shields.io/badge/Laravel-12.x-red?style=flat&logo=laravel)
 ![Filament](https://img.shields.io/badge/Filament-3.3-orange?style=flat&logo=php)
-![PHP](https://img.shields.io/badge/PHP-8.2+-blue?style=flat&logo=php)
+![PHP](https://img.shields.io/badge/PHP-8.3-blue?style=flat&logo=php)
 ![MySQL](https://img.shields.io/badge/MySQL-8.0-orange?style=flat&logo=mysql)
 ![Redis](https://img.shields.io/badge/Redis-7.0-red?style=flat&logo=redis)
 ![Docker](https://img.shields.io/badge/Docker-Enabled-blue?style=flat&logo=docker)
