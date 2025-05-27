@@ -285,8 +285,8 @@ Envie "2" para devolver este veículo.
 
 ### **1. Clone o repositório**
 ```bash
-git clone https://github.com/seu-usuario/vehicle-management.git
-cd vehicle-management
+git clone https://github.com/mauriciomgp5/vehicle_usage
+cd vehicle_usage
 ```
 
 ### **2. Configure o ambiente**
@@ -667,8 +667,8 @@ Este projeto está licenciado sob a **Licença MIT** - veja o arquivo [LICENSE](
 
 ⭐ **Gostou do projeto? Dê uma estrela no GitHub!** ⭐
 
-![GitHub stars](https://img.shields.io/github/stars/seu-usuario/vehicle-management?style=social)
-![GitHub forks](https://img.shields.io/github/forks/seu-usuario/vehicle-management?style=social)
-![GitHub watchers](https://img.shields.io/github/watchers/seu-usuario/vehicle-management?style=social)
+![GitHub stars](https://img.shields.io/github/stars/mauriciomgp5/vehicle-management?style=social)
+![GitHub forks](https://img.shields.io/github/forks/mauriciomgp5/vehicle-management?style=social)
+![GitHub watchers](https://img.shields.io/github/watchers/mauriciomgp5/vehicle-management?style=social)
 
 </div>
