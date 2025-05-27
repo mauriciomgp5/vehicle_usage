@@ -668,3 +668,7 @@ Este projeto está licenciado sob a **Licença MIT** - veja o arquivo [LICENSE](
 ![GitHub watchers](https://img.shields.io/github/watchers/seu-usuario/vehicle-management?style=social)
 
 </div>
+
+## 📹 Vídeo
+
+Você pode assistir ao vídeo [aqui](https://youtube.com/shorts/goDAjoZARqY?feature=share).
