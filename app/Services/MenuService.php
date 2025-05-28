@@ -188,12 +188,6 @@ class MenuService
                     $supervisor->phone . '@s.whatsapp.net',
                     "🚨 MONITORAMENTO DE FROTA 🚨\n\n" . $message
                 );
-                
-                // Log::info('Notificação enviada para supervisor:', [
-                //     'supervisor' => $supervisor->name,
-                //     'phone' => $supervisor->phone,
-                //     'message' => $message
-                // ]);
             } catch (\Exception $e) {
                 // Log::error('Erro ao notificar supervisor:', [
                 //     'supervisor' => $supervisor->name,
@@ -219,13 +213,6 @@ class MenuService
         
         $currentMenu = $this->redisSessionService->getCurrentMenu($phone);
         $session = $this->redisSessionService->getSession($phone);
-        
-        // Log::info('DEBUG handleUserResponse:', [
-        //     'phone' => $phone,
-        //     'message' => $message,
-        //     'currentMenu' => $currentMenu,
-        //     'session' => $session
-        // ]);
 
         // Se está aguardando o nome, criar usuário e seguir
         if ($currentMenu === 'ask_name') {
@@ -291,10 +278,35 @@ class MenuService
 
         // Fluxo especial para busca de veículos
         if (in_array($currentMenu, ['register_departure', 'register_return', 'check_status'])) {
-            $veiculos = Vehicle::where('plate', 'like', "%{$message}%")->get();
+            // Buscar apenas veículos que não estão em uso (sem checkout ativo)
+            $veiculos = Vehicle::where('plate', 'like', "%{$message}%")
+                              ->where('status', 'active')
+                              ->whereDoesntHave('usages', function($query) {
+                                  $query->whereNull('checkin_at');
+                              })
+                              ->get();
+                              
             if ($veiculos->count() === 0) {
+                // Verificar se existe veículo com essa placa mas está em uso
+                $veiculoEmUso = Vehicle::where('plate', 'like', "%{$message}%")
+                                     ->whereHas('usages', function($query) {
+                                         $query->whereNull('checkin_at');
+                                     })
+                                     ->first();
+                                     
+                if ($veiculoEmUso) {
+                    return [
+                        'message' => "⚠️ Veículo encontrado mas está em uso!\n\n" .
+                                   "🚗 {$veiculoEmUso->brand} {$veiculoEmUso->model} ({$veiculoEmUso->plate})\n" .
+                                   "📊 Status: Em uso por outro usuário\n\n" .
+                                   "Por favor, tente outro veículo:",
+                        'menu' => $currentMenu
+                    ];
+                }
+                
                 return [
-                    'message' => "❌ Nenhum veículo encontrado com essa placa.\n\n" .
+                    'message' => "❌ Nenhum veículo disponível encontrado com essa placa.\n\n" .
+                               "💡 Dica: Verifique se a placa está correta ou se o veículo não está em uso.\n\n" .
                                "Por favor, tente novamente:",
                     'menu' => $currentMenu
                 ];
@@ -308,16 +320,17 @@ class MenuService
                 $this->redisSessionService->updateMenu($phone, 'ask_purpose');
                 
                 return [
-                    'message' => "✅ Veículo encontrado: {$veiculo->brand} {$veiculo->model} ({$veiculo->plate})\n\n" .
-                               "📊 KM atual do veículo: {$kmAtual} km\n\n" .
+                    'message' => "✅ Veículo disponível encontrado: {$veiculo->brand} {$veiculo->model} ({$veiculo->plate})\n\n" .
+                               "📊 KM atual do veículo: {$kmAtual} km\n" .
+                               "🟢 Status: Disponível\n\n" .
                                $this->getMenuMessage('ask_purpose'),
                     'menu' => 'ask_purpose'
                 ];
             } else {
                 // Mais de um veículo encontrado
-                $lista = "🚗 Foram encontrados " . $veiculos->count() . " veículos:\n\n";
+                $lista = "🚗 Foram encontrados " . $veiculos->count() . " veículos disponíveis:\n\n";
                 foreach ($veiculos as $idx => $v) {
-                    $lista .= ($idx+1) . " - {$v->brand} {$v->model} ({$v->plate}) - KM: {$v->km}\n";
+                    $lista .= ($idx+1) . " - {$v->brand} {$v->model} ({$v->plate}) - KM: {$v->km} 🟢\n";
                 }
                 $this->redisSessionService->setSessionData($phone, 'vehicle_options', $veiculos->pluck('id')->toArray());
                 $this->redisSessionService->updateMenu($phone, 'select_vehicle');
@@ -344,7 +357,8 @@ class MenuService
                 
                 return [
                     'message' => "✅ Veículo selecionado: {$veiculo->brand} {$veiculo->model} ({$veiculo->plate})\n\n" .
-                               "📊 KM atual do veículo: {$kmAtual} km\n\n" .
+                               "📊 KM atual do veículo: {$kmAtual} km\n" .
+                               "🟢 Status: Disponível\n\n" .
                                $this->getMenuMessage('ask_purpose'),
                     'menu' => 'ask_purpose'
                 ];
@@ -492,12 +506,6 @@ class MenuService
                 $this->redisSessionService->setSessionData($phone, 'final_km', $kmFinal);
                 $this->redisSessionService->updateMenu($phone, 'confirm_return');
                 
-                // Log::info('DEBUG: Mudando para confirm_return', [
-                //     'phone' => $phone,
-                //     'final_km' => $kmFinal,
-                //     'new_menu' => 'confirm_return'
-                // ]);
-                
                 return [
                     'message' => "📋 Confirme os dados para registrar a devolução:\n\n" .
                                "🚗 Veículo: {$active->vehicle->brand} {$active->vehicle->model}\n" .
@@ -519,13 +527,12 @@ class MenuService
         // Confirmação da devolução
         if ($currentMenu === 'confirm_return') {
             $response = trim($message);
-            // Log::info('Confirm return response:', ['response' => $response, 'currentMenu' => $currentMenu]);
             
             if ($response === '1') {
                 // Confirma - registra a devolução
                 $active = $this->checkActiveUsage($userId);
                 if ($active) {
-                    $kmFinal = $this->redisSessionService->getSessionData($phone, 'final_km');
+                    $kmFinal = floatval($this->redisSessionService->getSessionData($phone, 'final_km'));
                     $kmInicial = floatval($active->initial_km);
                     
                     $active->final_km = $kmFinal;
@@ -567,7 +574,6 @@ class MenuService
                     ];
                 }
             } elseif ($response === '0') {
-                // Log::info('Cancelando devolução...');
                 // Cancela - volta ao menu de uso ativo
                 $active = $this->checkActiveUsage($userId);
                 
@@ -576,7 +582,6 @@ class MenuService
                 $this->redisSessionService->updateMenu($phone, 'active_usage_menu');
                 
                 if ($active) {
-                    // Log::info('Veículo em uso encontrado:', ['vehicle' => $active->vehicle->plate]);
                     return [
                         'message' => "❌ Devolução cancelada.\n\n" .
                                    "🚗 Veículo: {$active->vehicle->brand} {$active->vehicle->model}\n" .
@@ -586,7 +591,6 @@ class MenuService
                     ];
                 }
                 
-                // Log::info('Nenhum veículo em uso encontrado');
                 return [
                     'message' => "❌ Devolução cancelada.\n\n" . $this->getMenuMessage('active_usage_menu'),
                     'menu' => 'active_usage_menu'
