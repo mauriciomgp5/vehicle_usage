@@ -1,6 +1,6 @@
 services:
   app:
-    container_name: vehicle_app
+    container_name: vehicleapp
     restart: unless-stopped
     build:
       context: .

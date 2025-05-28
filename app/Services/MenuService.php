@@ -53,15 +53,6 @@ class MenuService
                         "❌ Para cancelar, digite /sair",
             'options' => []
         ],
-        'ask_km' => [
-            'message' => "🚗 REGISTRO DE QUILOMETRAGEM\n\n" .
-                        "📊 Por favor, informe o KM do veículo:\n\n" .
-                        "💡 Dicas:\n" .
-                        "• Digite apenas números\n" .
-                        "• Use ponto para decimais (ex: 12345.6)\n\n" .
-                        "❌ Para cancelar, digite /sair",
-            'options' => []
-        ],
         'ask_purpose' => [
             'message' => "🎯 MOTIVO DE UTILIZAÇÃO\n\n" .
                         "📝 Por favor, informe o motivo da utilização do veículo:\n\n" .
@@ -310,16 +301,23 @@ class MenuService
             } elseif ($veiculos->count() === 1) {
                 $veiculo = $veiculos->first();
                 $this->redisSessionService->setSessionData($phone, 'vehicle_id', $veiculo->id);
-                $this->redisSessionService->updateMenu($phone, 'ask_km');
+                
+                // Usar automaticamente o KM atual do veículo
+                $kmAtual = $veiculo->km;
+                $this->redisSessionService->setSessionData($phone, 'initial_km', $kmAtual);
+                $this->redisSessionService->updateMenu($phone, 'ask_purpose');
+                
                 return [
-                    'message' => "✅ Veículo encontrado: {$veiculo->brand} {$veiculo->model} ({$veiculo->plate})\n\nPor favor, informe o KM inicial do veículo:",
-                    'menu' => 'ask_km'
+                    'message' => "✅ Veículo encontrado: {$veiculo->brand} {$veiculo->model} ({$veiculo->plate})\n\n" .
+                               "📊 KM atual do veículo: {$kmAtual} km\n\n" .
+                               $this->getMenuMessage('ask_purpose'),
+                    'menu' => 'ask_purpose'
                 ];
             } else {
                 // Mais de um veículo encontrado
                 $lista = "🚗 Foram encontrados " . $veiculos->count() . " veículos:\n\n";
                 foreach ($veiculos as $idx => $v) {
-                    $lista .= ($idx+1) . " - {$v->brand} {$v->model} ({$v->plate})\n";
+                    $lista .= ($idx+1) . " - {$v->brand} {$v->model} ({$v->plate}) - KM: {$v->km}\n";
                 }
                 $this->redisSessionService->setSessionData($phone, 'vehicle_options', $veiculos->pluck('id')->toArray());
                 $this->redisSessionService->updateMenu($phone, 'select_vehicle');
@@ -338,10 +336,17 @@ class MenuService
                 $vehicleId = $options[$idx];
                 $veiculo = Vehicle::find($vehicleId);
                 $this->redisSessionService->setSessionData($phone, 'vehicle_id', $veiculo->id);
-                $this->redisSessionService->updateMenu($phone, 'ask_km');
+                
+                // Usar automaticamente o KM atual do veículo
+                $kmAtual = $veiculo->km;
+                $this->redisSessionService->setSessionData($phone, 'initial_km', $kmAtual);
+                $this->redisSessionService->updateMenu($phone, 'ask_purpose');
+                
                 return [
-                    'message' => "✅ Veículo selecionado: {$veiculo->brand} {$veiculo->model} ({$veiculo->plate})\n\nPor favor, informe o KM inicial do veículo:",
-                    'menu' => 'ask_km'
+                    'message' => "✅ Veículo selecionado: {$veiculo->brand} {$veiculo->model} ({$veiculo->plate})\n\n" .
+                               "📊 KM atual do veículo: {$kmAtual} km\n\n" .
+                               $this->getMenuMessage('ask_purpose'),
+                    'menu' => 'ask_purpose'
                 ];
             } else {
                 return [
@@ -349,39 +354,6 @@ class MenuService
                     'menu' => 'select_vehicle'
                 ];
             }
-        }
-
-        // Se está pedindo o KM, mostra confirmação antes de registrar
-        if ($currentMenu === 'ask_km') {
-            // Log::info('DEBUG: Entrando no ask_km com message: ' . $message);
-            $km = floatval($message);
-            $vehicleId = $this->redisSessionService->getSessionData($phone, 'vehicle_id');
-            $veiculo = Vehicle::find($vehicleId);
-            
-            // Validação: verificar último KM final do veículo
-            $ultimoUso = VehicleUsage::where('vehicle_id', $vehicleId)
-                                    ->whereNotNull('final_km')
-                                    ->orderBy('checkin_at', 'desc')
-                                    ->first();
-            
-            if ($ultimoUso && $km < $ultimoUso->final_km) {
-                return [
-                    'message' => "❌ Erro: KM inicial ({$km}) não pode ser menor que o último KM final registrado ({$ultimoUso->final_km}).\n\n" .
-                               "Por favor, informe um KM inicial válido:",
-                    'menu' => 'ask_km'
-                ];
-            }
-            
-            // Salva o KM para usar na confirmação
-            $this->redisSessionService->setSessionData($phone, 'initial_km', $km);
-            $this->redisSessionService->updateMenu($phone, 'ask_purpose');
-            
-            // Log::info('DEBUG: Mudando menu para ask_purpose');
-            
-            return [
-                'message' => $this->getMenuMessage('ask_purpose'),
-                'menu' => 'ask_purpose'
-            ];
         }
 
         // Se está pedindo o motivo de uso, mostra confirmação antes de registrar
@@ -404,8 +376,6 @@ class MenuService
             $vehicleId = $this->redisSessionService->getSessionData($phone, 'vehicle_id');
             $km = $this->redisSessionService->getSessionData($phone, 'initial_km');
             $veiculo = Vehicle::find($vehicleId);
-            
-            // Log::info('DEBUG: Mudando menu para confirm_checkout');
             
             return [
                 'message' => "📋 Confirme os dados para registrar a saída:\n\n" .
@@ -561,6 +531,9 @@ class MenuService
                     $active->final_km = $kmFinal;
                     $active->checkin_at = now();
                     $active->save();
+                    
+                    // Atualizar o KM atual do veículo
+                    $active->vehicle->update(['km' => $kmFinal]);
                     
                     // Notificar supervisores sobre o retorno
                     $this->notifySupervisors(
